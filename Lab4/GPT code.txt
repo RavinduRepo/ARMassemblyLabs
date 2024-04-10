@@ -1,0 +1,29 @@
+    .global main
+    .extern printf
+    .extern exit
+
+    .data
+string: .asciz "YourStringHere\n"  // Replace with your string
+    .align 2
+buffer: .space 20                  // Allocate space for string
+
+    .text
+main:
+    // Copy the string to the buffer
+    LDR R0, =string                // Load address of string
+    LDR R1, =buffer                // Load address of buffer space
+    MOV R2, #20                    // Length of the buffer
+
+copy_loop:
+    LDRB R3, [R0], #1              // Load byte from string and post-increment address
+    STRB R3, [R1], #1              // Store byte in buffer and post-increment address
+    SUBS R2, R2, #1                // Subtract 1 from counter
+    BNE copy_loop                  // If not zero, continue loop
+
+    // Print the string using printf
+    LDR R0, =buffer                // Pointer to the buffer
+    BL printf                      // Call printf
+
+    // Exit using exit
+    MOV R0, #0                     // Return 0 status on exit
+    BL exit                        // Call exit

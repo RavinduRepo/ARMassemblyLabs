@@ -1,0 +1,148 @@
+@lab 4 
+@group number : 19
+@Arm assembly 
+
+    .text
+
+	@ string length function
+stringLen:
+	sub	sp, sp, #4
+	str	lr, [sp, #0]
+
+	mov	r1, #0	@ length counter
+
+loop:
+	ldrb r2, [r0, #0]
+	cmp	r2, #0
+	beq	endLoop
+
+	add	r1, r1, #1	@ count length
+	add	r0, r0, #1	@ move to the next element in the char array
+	b	loop
+
+endLoop:
+    mov r2, r0
+	mov	r0, r1		@ to return the length
+	ldr	lr, [sp, #0]
+	add	sp, sp, #4
+	mov	pc, lr
+
+    @function to scan and reverse the string and print it
+reverse: 
+    ldr r11, =revArr    @space on heap memory
+
+	sub	sp, sp, #204     @presurving the stack
+	str	lr, [sp, #200]
+
+    ldr r0, =enterstring    
+    mov r1, r4
+    bl printf   @printf("Enter input string %d:", r4)
+
+    ldr r0, =formats
+    mov r1, sp
+    bl scanf    @scanf("%s",sp)
+
+    mov r0, sp
+    bl stringLen       @calculate the string length and stores in r0, stores last char address in r2
+    
+    sub r2, r2, #1
+    mov r6, #0      
+    strb r6, [r11, r0]      @null character
+
+loopRev:
+    cmp r0, r6      @loop untill all cahracters are coppied
+    blt endRev
+
+    ldrb r1, [r2]       @gets one char
+    strb r1, [r11, r6]  @stores the char inside the revArr
+
+    add r6, r6, #1  @increment to revArr index[heap stores upword]
+    sub r2, r2, #1
+
+    b loopRev
+
+endRev:
+    
+    mov r0, #0
+    str r0, [r11, r6] 
+    
+    ldr r0, =outputis
+    mov r1, r4
+    bl printf           @printf("Output string 2%d is…", r4)
+
+    ldr r0, =revArr
+    bl printf           @printf(revArr)
+    
+    ldr r0, =neline
+    bl printf
+
+	ldr	lr, [sp, #200]  @restored the stack
+	add	sp, sp, #204
+	mov	pc, lr		
+
+    .global main
+
+main:
+    @presurving the stack
+    sub sp, sp, #8
+    str r4, [sp, #4]
+    str lr, [sp, #0]
+
+    ldr r0, =enternum
+    bl printf   @printf("Enter the number of strings :\n")
+
+    @alloacate space for scanf
+    sub sp, sp, #4
+
+    @scan value
+    ldr r0, =formatd
+    mov r1, sp
+    bl  scanf    @scanf("%d",sp)
+
+    mov r4, #0
+
+    @saving number in r5
+    ldr r5, [sp, #0]
+
+    @realising the stack
+    add sp, sp, #4
+
+    cmp r4, r5
+    bgt errorM
+    b loopMain 
+
+    @if the number is invalid
+errorM: 
+    ldr r0, =invalid
+    bl printf
+    b exitM
+
+loopMain:
+    cmp r4, r5
+    bge exitM
+    
+    bl reverse
+
+    add r4, r4, #1      @r4 += 1
+    b loopMain
+
+exitM:
+    mov r0, #0
+    @ stack handling (pop lr from the stack) and return
+    ldr r4, [sp, #4]
+	ldr	lr, [sp, #0]
+	add	sp, sp, #8
+	mov	pc, lr	
+
+    .data
+    @data memory
+enternum: .asciz "Enter the number of strings :\n"
+formatd: .asciz "%d"
+formatdp: .asciz "%d\n"
+formats: .asciz "%*c%[^\n]"
+neline: .asciz "\n"
+enterstring: .asciz "Enter input string %d:\n"
+outputis: .asciz "Output string %d is…\n"
+invalid: .asciz "Invalid Number\n"
+revArr: .space 200
+
